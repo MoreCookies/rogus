@@ -1,6 +1,7 @@
 let main = document.querySelector("main");
 let input = document.querySelector("input");
 var prevP = document.querySelector("p");
+var index = require("./index.js")
 //confusion
 var inventory = [];
 

@@ -27,6 +27,9 @@ const app = express();
 const router = express.Router();
 const path = require('path');
 
+function ConsoleLog(toLog) {
+  console.log(toLog);
+}
 
 router.get('/', function(req, res){
   res.sendFile(path.join(__dirname, '/index.html'));
