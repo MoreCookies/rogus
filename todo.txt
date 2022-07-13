@@ -1,0 +1,8 @@
+todo list
+-split big functions into separate js files so more organized
+-make battling
+-make npc dialogue and stuff
+-add more level thingies
+-fix text printing (makes it so it appears downwards not up so the text box doesn't go brazil or something)
+-publish to itch.io and pray to jesus for some donations (extra dopamine quest, optional, champion's road achievement)
+-add other stuff ig lol
