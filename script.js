@@ -1,22 +1,25 @@
 let main = document.querySelector("main");
 let input = document.querySelector("input");
-var prevP = document.createElement("p");
-var docElements = [];
+let prevP = document.createElement("p");
+let docElements = [];
 document.body.appendChild(prevP);
-//var index = require("./index.js")
+//let index = require("./index.js")
 //confusion
-var inventory = {};
+let inventory = {};
+let hunting;
+let currentTurn = "player";
 
 class moveClass {
-  constructor(powr, type, energy, accuracy) {
+  constructor(name, powr, type, energy, accuracy) {
+    this.name = name;
     this.powr = powr;
     this.type = type;
     this.energy = energy;
     this.accuracy = accuracy;
   }
 
-  damage() {
-    if(generateRandom(0, 1) < accuracy) {
+  generateDamage() {
+    if (generateRandom(0, 1) < accuracy) {
       if (this.type == "magic") {
         return [Math.Floor(generateRandom(0.85, 1) * playerStats["m-attack"] * this.powr), energy]
       } else if (this.type == "physical") {
@@ -28,21 +31,19 @@ class moveClass {
   }
 }
 
-var stab = new moveClass(10, "physical", 5);
+let stab = new moveClass("stab", 10, "physical", 5, 100);
 
 
-var playerStats = {
+let playerStats = {
   "health": 100,
   "defence": 0,
   "attack": 10,
   "m-attack": 5,
   "energy": 100,
   "location": null,
-  "move1": stab,
-  "move2": null,
-  "move3": null
+  "moves": [stab]
 }
-var currentState = "idle";
+let currentState = "idle";
 
 function generateRandom(min, max) {
   let diff = max - min;
@@ -64,11 +65,13 @@ class enemyClass {
     //drop table be like drops = {"bones":[0,3,85]}
     //0 to 3 bones and 85% chance of getting one of those
     //todo: append drops to a dictionary, like this drops = {"bones":3428, "amongus": 69348} and then return
-    drops = {}
+    let drops = {}
     for (var i = 0; i < Object.keys(this.drops).length; i++) {
-      if (generateRandom(0, Object.keys(drops)[i][2]) <= Object.keys(drops)[i][2]) {
-        drops[Object.keys(this.drops[i])] = generateRandom(Object.keys(drops)[i][0], Object.keys(drops)[i][1])
+      let randomint = generateRandom(0, 100);
+      if (randomint <= this.drops[Object.keys(this.drops)[i]][2]) {
+        drops[Object.keys(this.drops)[i]] = generateRandom(this.drops[Object.keys(this.drops)[i]][0], this.drops[Object.keys(this.drops)[i]][1] + 1);
       }
+
     }
     return drops;
   }
@@ -79,9 +82,10 @@ class enemyClass {
 }
 
 //create teh enemies
-var croissant = new enemyClass(100, 1000, 10, { "croissant": [1, 2, 100] })
+let croissant = new enemyClass("croissant", 100, 1000, 10, { "croissant": [1, 2, 100] })
 //hey look it me
-
+hunting = croissant;
+//croissant is a placeholder lol
 
 let rooms = {
   "Center Room": { items: ["imposter", "among us tablet"], exits: { west: "West Room", east: "East Room", north: "North Room", south: "South Room" }, description: "The center of the dungeon. Lit only by the glowing wisps swirling above. Uncannily peaceful.", monsters: { "croissant": [croissant, 100] }, name: "Center Room" },
@@ -97,8 +101,9 @@ function splitText(text) {
   words = text.split(" ");
   verb = words.shift();
   noun = words.join(" ");
-  return [verb, noun];
+  return [verb.lower(), noun.lower()];
   //var noun = text[0:firstSpace]
+  //returns [attack, imposter] or [take, amongnus] (add quotes too lazy)
 
 }
 
@@ -115,35 +120,35 @@ function getCommand(text) {
         return;
       }
       if (lowerText == "inventory") {
-        if(Object.keys(inventory).length == 0) {
+        if (Object.keys(inventory).length == 0) {
           print("You don't have anything in your inventory!")
           return;
         }
-        
+
         invText = "You have "
         let count = 1
         for (const [key, value] of Object.entries(inventory)) {
-          if(count != Object.keys(inventory).length) {
-            if(value > 1) {
+          if (count != Object.keys(inventory).length) {
+            if (value > 1) {
               invText += `${value} ${key}s `
             } else if (value == 1) {
               invText += `a ${key} `
             }
-          } else if(count == Object.keys(inventory).length) {
-            if(value > 1) {
+          } else if (count == Object.keys(inventory).length) {
+            if (value > 1) {
               invText += `${value} ${key}s`
-            } else if(value == 1 && ["a","e","i","o","u"].includes(key[0])) {
+            } else if (value == 1 && ["a", "e", "i", "o", "u"].includes(key[0])) {
               invText += `an ${key}`
             } else if (value == 1) {
               invText += `a ${key}`
             }
           }
-          
-          if(count == Object.keys(inventory).length-1) {
+
+          if (count == Object.keys(inventory).length - 1) {
             invText += "and "
           }
           count += 1
-          
+
         }
         print(invText + ".")
         return;
@@ -169,11 +174,14 @@ function getCommand(text) {
         return;
       }
       if (didMove == true) {
-        //assumes that the monster rates are listed from GREATEST TO LEAST
+        //assumes that the monster rates are listed from LEAST TO GREATEST?
         randInt = generateRandom(0, 100);
+        total = 0;
         for (var i = 0; i < Object.keys(playerStats["location"].monsters).length; i++) {
-          if (randInt <= playerStats["location"].monsters[i][2]) {
+          total += playerStats["location"].monsters[i][2];
+          if (randInt <= total) {
             //make monster appear and initiate fight
+            hunting = hunt(monsters[i]);
             didMove = false;
             return;
           }
@@ -188,10 +196,10 @@ function getCommand(text) {
           if (playerStats["location"]["items"][i] == words[1]) {
             let item = playerStats["location"]["items"][i];
             print(item)
-            if(inventory[item] == null) {
+            if (inventory[item] == null) {
               console.log("we in boys")
               inventory[item] = 1;
-            } else if(inventory[item] > 0) {
+            } else if (inventory[item] > 0) {
               inventory[item] += 1;
             }
             print("You have taken the " + item);
@@ -206,10 +214,30 @@ function getCommand(text) {
 
       }
     }
-    print("That isn't a command! Type 'help' for a list of commands.")
-  } else if(currentState == "battling") {
-    //kill things
+  } else if (currentState == "battling") {
+    if (currentTurn == "player") {
+      if (["1", "2", "3", "4"].includes(words[0])) {
+        if (playerStats["moves"][parseInt(words[0])] != null) { //check if move exists
+          let damage = playerStats["moves"][parseInt(words[0]) - 1].generateDamage();
+          hunting.health -= damage;
+          if(hunting.health <= 0) {
+            //win
+            currentState = "idle";
+          }
+        } else {
+          print("Pick an existing move! Enter a number from 1-4 or 'run' to flee." + moveMessage);
+          return; //prevent from switching to enemy turn
+        }
+      } else if(words[0].lower() == "run") {
+        
+      }
+      currentTurn = "enemy";
+    } else if (currentTurn == "enemy") {
+      playerStats["health"] -= hunting.generateDmg;
+      currentTurn = "player";
+    }
   }
+  print("That isn't a command! Type 'help' for a list of commands.")
 }
 
 
@@ -219,22 +247,28 @@ function describe() {
   print(playerStats["location"]["description"] + "\n")
   itemTxt = "";
   exitTxt = "";
-  for (let i = playerStats["location"].items.length - 1; i >= 0; i--) {
-    prefix = ""
-    if (["a", "e", "i", "o", "u"].includes(playerStats["location"].items[i][0])) {
-      prefix = "an "
-    } else {
-      prefix = "a "
+  if (playerStats["location"].items.length > 0) {
+    for (let i = playerStats["location"].items.length - 1; i >= 0; i--) {
+      prefix = ""
+      if (["a", "e", "i", "o", "u"].includes(playerStats["location"].items[i][0])) {
+        prefix = "an "
+      } else {
+        prefix = "a "
+      }
+      if (i == 0 && playerStats["location"].items.length > 1) {
+        itemTxt += "and " + prefix + playerStats["location"].items[i];
+      } else if (playerStats["location"].items.length > 2) {
+        itemTxt += prefix + playerStats["location"].items[i] + ", ";
+      } else {
+        itemTxt += prefix + playerStats["location"].items[i] + " ";
+      }
     }
-    if (i == 0 && playerStats["location"].items.length > 1) {
-      itemTxt += "and " + prefix + playerStats["location"].items[i];
-    } else if (playerStats["location"].items.length > 2) {
-      itemTxt += prefix + playerStats["location"].items[i] + ", ";
-    } else {
-      itemTxt += prefix + playerStats["location"].items[i] + " ";
-    }
+    print("There is " + itemTxt + " in the room.");
+  } else {
+    print("There is nothing in the room.")
   }
-  print("There is " + itemTxt + " in the room.");
+
+
   for (let i = Object.keys(playerStats["location"].exits).length - 1; i >= 0; i--) {
     if (i == 0 && Object.keys(playerStats["location"].exits).length > 1) {
       exitTxt += " and an exit to the " + Object.keys(playerStats["location"].exits)[i]
@@ -255,12 +289,12 @@ function print(text) {
   prevP.before(p);
   prevP = p;
   docElements.push(prevP);
-  if(docElements.length >= 10) {
+  if (docElements.length >= 10) {
     docElements[0].remove();
     docElements.splice(0, 1);
   }
   //prevP = p;
-  
+
   //input.before(p);
   //prevP.style.fontFamily = "monospace";
   input.scrollIntoView();
@@ -280,20 +314,24 @@ function getInput(evt) {
 
 function hunt(enemy) {
   currentState = "battling";
-  moveMessage = `Your moves are `
-  move1 = `${playerStats["move1"]}`
-  move2 = `${playerStats["move2"]}`
-  move3 = `${playerStats["move3"]}`
-  if(move2 == "null") {
-    console.log("stopped at 2")
-  }
-  print('A {enemy.name} appeared and attacks you! It has {enemy.health} HP! <br> What is your first move?')
-  while (currentState == "battling") {
-    //figte
+
+  moveMessage = `Your move(s) are `
+  for (var i = 0; i < playerStats["moves"].length; i++) {
+    if (i == playerStats["moves"].length - 1 && playerStats["moves"].length > 1) { //check if last move and if moves length is not 1 (and a among us or I have one amongus not I have and one amonugs)
+      moveMessage = moveMessage.concat("and " + playerStats["moves"][i].name + ".")
+    } else if (i == playerStats["moves"].length - 1) {
+      moveMessage = moveMessage.concat(playerStats["moves"][i].name + ".")
+    } else {
+      moveMessage = moveMessage.concat(playerStats["moves"][i].name + " ")
+    }
 
   }
-
+  print(`A ${enemy.name} appeared and attacks you! It has ${enemy.health} HP! <br> ` + moveMessage + "You can also run. What do you do?");
+  return enemy;
 }
 
 input.addEventListener("keyup", getInput, false);
 console.log(splitText("among"))
+console.log(croissant.generateDrops())
+console.log(generateRandom(1, 2))
+hunt(croissant)

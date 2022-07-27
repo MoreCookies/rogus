@@ -36,6 +36,11 @@ router.get('/', function(req, res){
 });
 router.get('/script.js', function(req, res){
   res.sendFile(path.join(__dirname, '/script.js'));
+  
+});
+router.get('/getCommand.js', function(req, res){
+  res.sendFile(path.join(__dirname, '/getCommand.js'));
+  
 });
 app.use('/', router);
 
