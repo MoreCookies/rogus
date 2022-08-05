@@ -116,7 +116,7 @@ function getCommand(text) {
           }
         } else {
           print("Pick an existing move! Enter a number from 1-4 or 'run' to flee." + moveMessage);
-          break; //prevent from switching to enemy turn
+          return; //prevent from switching to enemy turn
         }
       } else if(words[0].lower() == "run") {
         

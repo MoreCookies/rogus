@@ -31,20 +31,30 @@ function ConsoleLog(toLog) {
   console.log(toLog);
 }
 
-router.get('/', function(req, res){
+router.get('/', function(req, res) {
   res.sendFile(path.join(__dirname, '/index.html'));
 });
-router.get('/script.js', function(req, res){
+/*
+testing wildcard loading stuff
+what's a nodejs lol
+router.get('/scripts*', function(req, res) {
   res.sendFile(path.join(__dirname, '/script.js'));
-  
+  res.sendFile(path.join(__dirname, '/style.css'))
+  res.sendFile(path.join(__dirname, '/getCommand.js'))
+
 });
-router.get('/getCommand.js', function(req, res){
-  res.sendFile(path.join(__dirname, '/getCommand.js'));
-  
+*/
+router.get('/script.js', function(req, res) {
+  res.sendFile(path.join(__dirname, '/script.js'));
+
+});
+router.get('/getCommand.js', function(req, res) {
+  res.sendFile(path.join(__dirname, '/getCommand.js'))
+
 });
 app.use('/', router);
 
-let server = app.listen(443, function(){
+let server = app.listen(443, function() {
   console.log("App server is running on port 443");
   console.log("to end press Ctrl + C");
 });

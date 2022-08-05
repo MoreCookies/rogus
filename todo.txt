@@ -1,7 +1,23 @@
 todo list
--split big functions into separate js files so more organized
 -make battling
 -make npc dialogue and stuff
--add more rooms
 -publish to itch.io and pray to jesus for some donations (extra dopamine quest, optional, champion's road achievement)
 -add other stuff ig lol
+-figure out wildcard referencing of different scripts
+-add ability to unlock rooms / using non-combat related items
+-crafting?
+-cooking?
+-fishing?
+-skills?
+-levelling?
+
+CURRENT TASK:
+USING ITEMS
+interacts property of room class:
+[[itemToUse, effect, noun],...]
+itemToUse: self explanatory
+effect: one of ["unlock", "give things (change quest progress maybe?)", "fishing"]
+
+WHEN PLAYER uses "use" keyword it checks all of the interacts in a room and if the item specified has a match it does the thing
+
+ALL RESULTS HAPPEN IN doInteract funciton
